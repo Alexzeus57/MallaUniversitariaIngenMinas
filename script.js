@@ -94,6 +94,8 @@ const semestres = [
   ]
 ];
 
+const malla = document.getElementById("malla");
+
 semestres.forEach((semestre, index) => {
   const columna = document.createElement("div");
   columna.className = "semestre";
@@ -108,7 +110,38 @@ semestres.forEach((semestre, index) => {
     div.textContent = asig.nombre;
     div.setAttribute("data-prerrequisitos", asig.prerrequisitos);
 
-    marcarAprobada(asig.nombre, div);
+   function marcarAprobada(nombre, div) {
+  const aprobadas = JSON.parse(localStorage.getItem("aprobadas")) || [];
+
+  // Si ya está aprobada, marcarla visualmente
+  if (aprobadas.includes(nombre)) {
+    div.classList.add("aprobada");
+  }
+
+  div.addEventListener("click", () => {
+    const prerreqs = div.getAttribute("data-prerrequisitos");
+    const lista = prerreqs ? prerreqs.split(",").map(p => p.trim()) : [];
+
+    // Validar prerrequisitos
+    const faltantes = lista.filter(pr => !aprobadas.includes(pr));
+    if (faltantes.length > 0) {
+      alert(`No puedes aprobar esta asignatura aún. Faltan: ${faltantes.join(", ")}`);
+      return;
+    }
+
+    // Alternar estado
+    if (div.classList.contains("aprobada")) {
+      div.classList.remove("aprobada");
+      const index = aprobadas.indexOf(nombre);
+      if (index !== -1) aprobadas.splice(index, 1);
+    } else {
+      div.classList.add("aprobada");
+      aprobadas.push(nombre);
+    }
+
+    localStorage.setItem("aprobadas", JSON.stringify(aprobadas));
+  });
+}
 
     columna.appendChild(div);
   });
