@@ -109,7 +109,6 @@ const semestres = [
   [
     { nombre: "Trabajo de Titulación", prerrequisitos: "Tópico de Especialidad II, Legislación Laboral y Minera, Taller de Evaluación de Proyectos Metalúrgicos, Taller de Proyecto Mina Subterránea, Taller de Proyecto Mina Cielo Abierto, Electivo II" }
   ]
-
 ];
 
 // Elementos del DOM
@@ -141,6 +140,14 @@ function construirMalla() {
     btnMensaje.textContent = "Ver mensaje de aprobación";
     btnMensaje.style.marginBottom = "10px";
     btnMensaje.style.cursor = "pointer";
+
+    // Mostrar solo si semestre completo
+    if (checkSemestreCompleto(index + 1)) {
+      btnMensaje.style.display = "block";
+    } else {
+      btnMensaje.style.display = "none";
+    }
+
     btnMensaje.addEventListener("click", () => {
       alert(mensajesSemestre[index + 1] || "Mensaje no disponible.");
     });
@@ -230,7 +237,9 @@ function toggleAprobada(nombre, div) {
   }
   localStorage.setItem("aprobadas", JSON.stringify(aprobadas));
   actualizarInfo();
-  actualizarVista();
+
+  // Reconstruye la malla para actualizar botones y estados visibles
+  construirMalla();
 
   chequearCarreraCompleta();
 }
@@ -314,38 +323,14 @@ function chequearCarreraCompleta() {
       mensajeDiv.id = "mensaje-final";
       mensajeDiv.style.marginTop = "10px";
       mensajeDiv.style.padding = "10px";
-      mensajeDiv.style.backgroundColor = "#c9e5f6";
-      mensajeDiv.style.color = "#2a4d81";
-      mensajeDiv.style.border = "2px solid #183d6b";
-      mensajeDiv.style.borderRadius = "8px";
+      mensajeDiv.style.backgroundColor = "#dff0d8";
+      mensajeDiv.style.border = "1px solid #3c763d";
+      mensajeDiv.style.color = "#3c763d";
       mensajeDiv.style.fontWeight = "bold";
       mensajeDiv.textContent = mensajeFinal;
 
-      const btnMostrar = document.createElement("button");
-      btnMostrar.textContent = "Volver a ver mensaje final";
-      btnMostrar.style.display = "block";
-      btnMostrar.style.marginTop = "8px";
-      btnMostrar.style.padding = "8px";
-      btnMostrar.style.cursor = "pointer";
-      btnMostrar.style.borderRadius = "5px";
-      btnMostrar.style.border = "1.5px solid #183d6b";
-      btnMostrar.style.backgroundColor = "#fde9f0";
-      btnMostrar.style.color = "#a0516e";
-
-      btnMostrar.addEventListener("click", () => {
-        alert(mensajeFinal);
-      });
-
       contenedor.appendChild(mensajeDiv);
-      contenedor.appendChild(btnMostrar);
     }
-  } else {
-    const mensajeDiv = document.getElementById("mensaje-final");
-    if (mensajeDiv) mensajeDiv.remove();
-
-    const contenedor = document.querySelector(".controles");
-    const btnMostrar = contenedor.querySelector("button:nth-last-child(1)");
-    if (btnMostrar && btnMostrar.textContent === "Volver a ver mensaje final") btnMostrar.remove();
   }
 }
 
@@ -353,5 +338,6 @@ filtro.addEventListener("change", () => {
   actualizarVista();
 });
 
+// Inicializar malla y estado
 construirMalla();
-chequearCarreraCompleta();
+actualizarInfo();
