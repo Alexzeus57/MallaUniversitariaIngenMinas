@@ -170,19 +170,19 @@ h1 {
   z-index: 10;
 }
 
-/* Bloqueada (prerrequisitos no cumplidos) */
-.asignatura.bloqueada {
-  color: gray !important;
-  opacity: 0.5;
-  pointer-events: none; /* no permite click */
-  background-color: #e0e0e0 !important;
-  border-color: #a0a0a0 !important;
-  cursor: default;
-}
-
 /* Ocultas por filtro */
 .asignatura.oculto {
   display: none !important;
+}
+
+/* Bloqueada (prerrequisitos no cumplidos) */
+.asignatura.bloqueada {
+  color: gray !important;
+  opacity: 0.6;
+  pointer-events: none; /* no se puede clickear */
+  background-color: #e0e0e0 !important;
+  border-color: #a0a0a0 !important;
+  cursor: default;
 }
 
 /* Responsive */
