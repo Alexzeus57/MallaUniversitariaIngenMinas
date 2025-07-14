@@ -44,7 +44,6 @@ h1 {
 }
 
 /* Contenedor de la malla con grid y scroll horizontal */
-/* Aquí aumentamos el min-width para mejor ajuste */
 .malla-container {
   display: grid;
   grid-template-columns: repeat(11, minmax(140px, 1fr));
@@ -54,13 +53,11 @@ h1 {
   scroll-behavior: smooth;
 }
 
-/* Columna semestre con fondo transparente para distinguir pero no bloques */
 .semestre {
   padding: 10px;
   border-radius: 8px;
 }
 
-/* Título semestre más pequeño y centrado */
 .semestre h2 {
   text-align: center;
   font-size: 0.85rem;
@@ -68,15 +65,15 @@ h1 {
   color: #4a4a4a;
 }
 
-/* Asignatura base: fondo rosa pálido, texto y borde rosa oscuro */
+/* Asignatura base */
 .asignatura {
   background-color: #fde9f0; /* rosa pálido */
-  color: #a0516e; /* rosa oscuro */
-  border: 1.5px solid #a0516e; /* rosa oscuro */
+  color: #a0516e; /* rosa oscuro por defecto */
+  border: 1.5px solid #a0516e;
   padding: 8px 10px;
   margin-bottom: 8px;
   border-radius: 8px;
-  font-size: 0.8rem;          /* Reducido para mejor ajuste */
+  font-size: 0.8rem;
   line-height: 1.2;
   cursor: pointer;
   position: relative;
@@ -86,14 +83,19 @@ h1 {
     color 0.3s,
     border-color 0.3s,
     opacity 0.3s;
-  white-space: normal;        /* Permite salto de línea */
+  white-space: normal;
   word-wrap: break-word;
   overflow-wrap: break-word;
   hyphens: auto;
   max-width: 100%;
 }
 
-/* Hover muestra prerrequisitos encima */
+/* Letras negras solo si no están en curso ni aprobadas */
+.asignatura:not(.aprobada):not(.en-curso) {
+  color: #000;
+}
+
+/* Hover muestra prerrequisitos */
 .asignatura:hover::after {
   content: attr(data-prerrequisitos);
   position: absolute;
@@ -110,8 +112,7 @@ h1 {
   box-shadow: 1px 1px 6px rgba(0,0,0,0.4);
 }
 
-/* Estado aprobado (doble clic) */
-/* Fondo celeste pálido, texto azul, borde azul oscuro */
+/* Aprobada */
 .asignatura.aprobada {
   background-color: #c9e5f6;
   color: #2a4d81;
@@ -119,7 +120,6 @@ h1 {
   opacity: 1;
 }
 
-/* Línea diagonal para tachar (pseudo elemento) */
 .asignatura.aprobada::before {
   content: "";
   position: absolute;
@@ -133,28 +133,26 @@ h1 {
   pointer-events: none;
 }
 
-/* Estado en curso (1 clic) */
-/* Fondo amarillo claro, texto negro, borde naranja suave */
+/* En curso */
 .asignatura.en-curso {
   background-color: #fff9d6;
   color: #5c4700;
   border-color: #dbb700;
 }
 
-/* Estado resaltado (3 clics) */
-/* Borde grueso y sombra */
+/* Resaltada (por prerrequisito o 3 clics) */
 .asignatura.resaltada {
   box-shadow: 0 0 10px 3px #ffe066;
   border-width: 3px;
   z-index: 10;
 }
 
-/* Ocultar asignaturas según filtro */
+/* Ocultas por filtro */
 .asignatura.oculto {
   display: none !important;
 }
 
-/* Responsive: en pantallas chicas, menos columnas y tamaño más legible */
+/* Responsive */
 @media (max-width: 900px) {
   .malla-container {
     grid-template-columns: repeat(5, minmax(120px, 1fr));
