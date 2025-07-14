@@ -140,14 +140,7 @@ function construirMalla() {
     btnMensaje.textContent = "Ver mensaje de aprobación";
     btnMensaje.style.marginBottom = "10px";
     btnMensaje.style.cursor = "pointer";
-
-    // Mostrar solo si semestre completo
-    if (checkSemestreCompleto(index + 1)) {
-      btnMensaje.style.display = "block";
-    } else {
-      btnMensaje.style.display = "none";
-    }
-
+    btnMensaje.style.display = "none"; // Oculto inicialmente
     btnMensaje.addEventListener("click", () => {
       alert(mensajesSemestre[index + 1] || "Mensaje no disponible.");
     });
@@ -163,6 +156,15 @@ function construirMalla() {
       if (aprobadas.includes(asig.nombre)) div.classList.add("aprobada");
       else if (enCurso.includes(asig.nombre)) div.classList.add("en-curso");
 
+      // Bloqueo si prerrequisitos NO aprobados y no está aprobada ni en curso
+      if (!aprobadas.includes(asig.nombre) && !enCurso.includes(asig.nombre)) {
+        const prereqs = asig.prerrequisitos ? asig.prerrequisitos.split(",").map(p => p.trim()) : [];
+        const faltantes = prereqs.filter(pr => !aprobadas.includes(pr));
+        if (faltantes.length > 0) {
+          div.classList.add("bloqueada");
+        }
+      }
+
       let clickCount = 0;
       div.addEventListener("click", (e) => {
         e.preventDefault();
@@ -175,7 +177,7 @@ function construirMalla() {
           } else if (clickCount === 2) {
             toggleAprobada(asig.nombre, div);
           } else if (clickCount === 3) {
-            toggleResaltada(asig.nombre);
+            toggleResaltadaDesbloquea(asig.nombre);
           }
           clickCount = 0;
         }, clickDelay);
@@ -189,6 +191,7 @@ function construirMalla() {
 
   actualizarVista();
   actualizarInfo();
+  actualizarBotonesMensajeSemestre();
 }
 
 function toggleEnCurso(nombre, div) {
@@ -237,34 +240,35 @@ function toggleAprobada(nombre, div) {
   }
   localStorage.setItem("aprobadas", JSON.stringify(aprobadas));
   actualizarInfo();
-
-  // Reconstruye la malla para actualizar botones y estados visibles
-  construirMalla();
+  actualizarVista();
 
   chequearCarreraCompleta();
 }
 
-function toggleResaltada(nombre) {
+function toggleResaltadaDesbloquea(nombre) {
+  // Primero quita resaltados previos
   document.querySelectorAll(".asignatura.resaltada").forEach(el => el.classList.remove("resaltada"));
 
   if (resaltadas.includes(nombre)) {
     resaltadas = [];
-  } else {
-    resaltadas = [nombre];
+    return;
   }
 
-  resaltadas.forEach(nombreR => {
-    const asigsConPrerreq = [...document.querySelectorAll(".asignatura")].filter(el => {
-      const prereqs = el.getAttribute("data-prerrequisitos").split(",").map(p => p.trim());
-      return prereqs.includes(nombreR);
-    });
-    asigsConPrerreq.forEach(asig => asig.classList.add("resaltada"));
+  resaltadas = [nombre];
 
-    const principal = [...document.querySelectorAll(".asignatura")].find(el => el.textContent === nombreR);
-    if (principal) {
-      principal.classList.add("resaltada");
-    }
+  // Encontrar las asignaturas que tienen este nombre en sus prerrequisitos
+  const asignaturasQueDesbloquea = [...document.querySelectorAll(".asignatura")].filter(el => {
+    const prereqs = el.getAttribute("data-prerrequisitos").split(",").map(p => p.trim());
+    return prereqs.includes(nombre);
   });
+
+  asignaturasQueDesbloquea.forEach(asig => asig.classList.add("resaltada"));
+
+  // También resaltar la asignatura principal
+  const principal = [...document.querySelectorAll(".asignatura")].find(el => el.textContent === nombre);
+  if (principal) {
+    principal.classList.add("resaltada");
+  }
 }
 
 function checkSemestreCompleto(semestre) {
@@ -282,6 +286,7 @@ function actualizarVista() {
     const estaAprobada = aprobadas.includes(nombre);
     const estaEnCurso = enCurso.includes(nombre);
 
+    // Mostrar/Ocultar segun filtro
     if (filtroValor === "aprobadas" && !estaAprobada) {
       div.classList.add("oculto");
     } else if (filtroValor === "en-curso" && !estaEnCurso) {
@@ -289,7 +294,25 @@ function actualizarVista() {
     } else if (filtroValor === "por-cursar" && (estaAprobada || estaEnCurso)) {
       div.classList.add("oculto");
     }
+
+    // Actualizar clase bloqueada según prerrequisitos y estado
+    if (!estaAprobada && !estaEnCurso) {
+      // Buscar prerrequisitos
+      const semestreIdx = parseInt(div.getAttribute("data-semestre")) - 1;
+      const asigData = semestres[semestreIdx].find(a => a.nombre === nombre);
+      const prereqs = asigData.prerrequisitos ? asigData.prerrequisitos.split(",").map(p => p.trim()) : [];
+      const faltantes = prereqs.filter(pr => !aprobadas.includes(pr));
+      if (faltantes.length > 0) {
+        div.classList.add("bloqueada");
+      } else {
+        div.classList.remove("bloqueada");
+      }
+    } else {
+      div.classList.remove("bloqueada");
+    }
   });
+
+  actualizarBotonesMensajeSemestre();
 }
 
 function actualizarInfo() {
@@ -323,21 +346,58 @@ function chequearCarreraCompleta() {
       mensajeDiv.id = "mensaje-final";
       mensajeDiv.style.marginTop = "10px";
       mensajeDiv.style.padding = "10px";
-      mensajeDiv.style.backgroundColor = "#dff0d8";
-      mensajeDiv.style.border = "1px solid #3c763d";
-      mensajeDiv.style.color = "#3c763d";
+      mensajeDiv.style.backgroundColor = "#c9e5f6";
+      mensajeDiv.style.color = "#2a4d81";
+      mensajeDiv.style.border = "2px solid #183d6b";
+      mensajeDiv.style.borderRadius = "8px";
       mensajeDiv.style.fontWeight = "bold";
       mensajeDiv.textContent = mensajeFinal;
 
+      const btnMostrar = document.createElement("button");
+      btnMostrar.textContent = "Volver a ver mensaje final";
+      btnMostrar.style.display = "block";
+      btnMostrar.style.marginTop = "8px";
+      btnMostrar.style.padding = "8px";
+      btnMostrar.style.cursor = "pointer";
+      btnMostrar.style.borderRadius = "5px";
+      btnMostrar.style.border = "1.5px solid #183d6b";
+      btnMostrar.style.backgroundColor = "#fde9f0";
+      btnMostrar.style.color = "#a0516e";
+
+      btnMostrar.addEventListener("click", () => {
+        alert(mensajeFinal);
+      });
+
       contenedor.appendChild(mensajeDiv);
+      contenedor.appendChild(btnMostrar);
     }
+  } else {
+    const mensajeDiv = document.getElementById("mensaje-final");
+    if (mensajeDiv) mensajeDiv.remove();
+
+    const contenedor = document.querySelector(".controles");
+    const btnMostrar = contenedor.querySelector("button:nth-last-child(1)");
+    if (btnMostrar && btnMostrar.textContent === "Volver a ver mensaje final") btnMostrar.remove();
   }
+}
+
+function actualizarBotonesMensajeSemestre() {
+  // Mostrar el botón de mensaje solo si el semestre está completo
+  document.querySelectorAll(".semestre").forEach((columna, idx) => {
+    const btn = columna.querySelector("button");
+    if (!btn) return;
+
+    if (checkSemestreCompleto(idx + 1)) {
+      btn.style.display = "block";
+    } else {
+      btn.style.display = "none";
+    }
+  });
 }
 
 filtro.addEventListener("change", () => {
   actualizarVista();
 });
 
-// Inicializar malla y estado
 construirMalla();
-actualizarInfo();
+chequearCarreraCompleta();
