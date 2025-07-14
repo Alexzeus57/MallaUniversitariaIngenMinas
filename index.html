@@ -8,6 +8,22 @@
 </head>
 <body>
   <h1>Malla Universitaria - Ingeniería en Minas</h1>
+
+  <!-- Contenedor de controles -->
+  <div class="controles">
+    <select id="filtro">
+      <option value="todas">Ver todas</option>
+      <option value="aprobadas">Ver aprobadas</option>
+      <option value="en-curso">Ver en curso</option>
+      <option value="por-cursar">Ver por cursar</option>
+    </select>
+    <div class="info">
+      <span id="avance">Avance: 0%</span> |
+      <span id="semestre-atrasado">Semestre más atrasado: -</span>
+    </div>
+  </div>
+
+  <!-- Contenedor de la malla -->
   <div id="malla" class="malla-container"></div>
 
   <script src="script.js"></script>
