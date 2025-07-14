@@ -12,6 +12,29 @@ h1 {
   margin-bottom: 20px;
 }
 
+/* Botón mensaje final debajo del título */
+#btn-mensaje-final {
+  display: block;
+  margin: 0 auto 20px auto;
+  padding: 10px 20px;
+  background-color: #a0516e; /* rosa oscuro */
+  color: #fde9f0; /* rosa pálido */
+  border: 2px solid #a0516e;
+  border-radius: 8px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.3s, color 0.3s;
+  max-width: 400px;
+  text-align: center;
+  user-select: none;
+}
+
+#btn-mensaje-final:hover {
+  background-color: #fde9f0;
+  color: #a0516e;
+  border-color: #a0516e;
+}
+
 /* Controles (filtro + info) arriba de la malla */
 .controles {
   display: flex;
