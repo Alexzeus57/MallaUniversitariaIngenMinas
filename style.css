@@ -175,6 +175,15 @@ h1 {
   display: none !important;
 }
 
+/* Bloqueada (fondo y texto gris, no clickeable) */
+.asignatura.bloqueada {
+  background-color: #ddd !important;
+  color: #777 !important;
+  cursor: not-allowed !important;
+  pointer-events: none;
+  opacity: 0.6;
+}
+
 /* Responsive */
 @media (max-width: 900px) {
   .malla-container {
