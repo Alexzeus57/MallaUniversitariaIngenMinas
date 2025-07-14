@@ -1,0 +1,60 @@
+body {
+  font-family: Arial, sans-serif;
+  margin: 20px;
+  background-color: #f4f4f4;
+  color: #333;
+}
+
+h1 {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.malla-container {
+  display: grid;
+  grid-template-columns: repeat(11, 1fr);
+  gap: 10px;
+  overflow-x: auto;
+}
+
+.semestre {
+  background-color: #fff;
+  border: 1px solid #ccc;
+  padding: 10px;
+  border-radius: 8px;
+}
+
+.semestre h2 {
+  text-align: center;
+  font-size: 1rem;
+  margin-bottom: 10px;
+}
+
+.asignatura {
+  background-color: #e0f0ff;
+  border: 1px solid #99c;
+  padding: 6px;
+  margin-bottom: 6px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background 0.3s;
+  position: relative;
+}
+
+.asignatura:hover::after {
+  content: attr(data-prerrequisitos);
+  position: absolute;
+  top: -1.8em;
+  left: 0;
+  background: #333;
+  color: #fff;
+  font-size: 0.75em;
+  padding: 4px 8px;
+  border-radius: 4px;
+  white-space: pre;
+}
+
+.asignatura.aprobada {
+  background-color: #b6e7c9;
+  text-decoration: line-through;
+}
