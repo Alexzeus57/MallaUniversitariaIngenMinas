@@ -94,19 +94,47 @@ const semestres = [
   ]
 ];
 
+const mensajesSemestre = {
+  1: "¡Bien hecho Pulguita! Completaste el primer paso. ¡El comienzo de un gran camino!",
+  2: "¡Excelente Potito! El segundo al bolsillo. ¡Sigue así!",
+  3: "¡Vas con todo! Tercer semestre completado con éxito, siempre cuenta conmigo.",
+  4: "¡Ya estás casi en la mitad! Cuarto semestre terminado y seguimos con el mismo apoyo.",
+  5: "¡Impresionante! Has superado cinco semestres, eres sequisima, no te rindas.",
+  6: "¡Wow! Ya llevas seis. ¡Una verdadera ingeniera hermosa por donde la miren!",
+  7: "¡Felicidades! Siete semestres, ya cada vez queda menos.",
+  8: "¡Solo faltan unos pocos pasos! Semestre ocho me mamas el xoxo, jeje.",
+  9: "¡Un paso más cerca de la meta! Nueve semestres, como siempre te dije, eres muy capaz.",
+  10: "¡Ya casi terminas! Semestre diez fuera del camino, no hay obstáculo que pueda contigo.",
+  11: "¡INCREÍBLE! ¡Has completado toda la carrera! 🎓🎉"
+};
+
+const mensajeFinal = `Mi amada pulguita, siempre supe que serías capaz de terminar la carrera, me siento enormemente orgulloso de ti, de todo el esfuerzo, las lagrimos y el sudor que pusiste en cada uno de los momentos que viviste durante todos estos años. Se lo mucho que sacrificaste para conseguirlo. Te amo muchisimo, disfrutalo, vivelo y jamás te des por vencida, tu eres increible, devorate el mundo entero. Atte Tu Osito.`;
+
 const malla = document.getElementById("malla");
 const filtro = document.getElementById("filtro");
 const avanceSpan = document.getElementById("avance");
 const semestreAtrasadoSpan = document.getElementById("semestre-atrasado");
+
+// Crear botón mensaje final y agregarlo debajo del título, oculto inicialmente
+let btnMensajeFinal = document.createElement("button");
+btnMensajeFinal.id = "btn-mensaje-final";
+btnMensajeFinal.textContent = "Ver mensaje especial final 🎉";
+btnMensajeFinal.style.display = "none"; // oculto inicialmente
+btnMensajeFinal.addEventListener("click", () => {
+  alert(mensajeFinal);
+});
+document.querySelector("h1").insertAdjacentElement("afterend", btnMensajeFinal);
 
 // Estados guardados
 let aprobadas = JSON.parse(localStorage.getItem("aprobadas")) || [];
 let enCurso = JSON.parse(localStorage.getItem("enCurso")) || [];
 let resaltadas = []; // no persistimos resaltadas
 
-// Para contar clics rápidos (1,2,3)
 const clickDelay = 350; // ms para diferenciar entre clicks
 let clickTimeout = null;
+
+// Para controlar si ya mostré mensaje semestre (evitar repetir)
+let semestresMostrados = JSON.parse(localStorage.getItem("semestresMostrados")) || [];
 
 // Construye la malla
 function construirMalla() {
@@ -127,11 +155,9 @@ function construirMalla() {
       div.setAttribute("data-prerrequisitos", asig.prerrequisitos);
       div.setAttribute("data-semestre", index + 1);
 
-      // Estado visual inicial
       if (aprobadas.includes(asig.nombre)) div.classList.add("aprobada");
       else if (enCurso.includes(asig.nombre)) div.classList.add("en-curso");
 
-      // Manejo clicks múltiples
       let clickCount = 0;
       div.addEventListener("click", (e) => {
         e.preventDefault();
@@ -162,7 +188,6 @@ function construirMalla() {
 
 // Alternar estado en curso
 function toggleEnCurso(nombre, div) {
-  // Si está aprobada, no se puede poner en curso
   if (div.classList.contains("aprobada")) return;
 
   if (div.classList.contains("en-curso")) {
@@ -179,7 +204,6 @@ function toggleEnCurso(nombre, div) {
 
 // Alternar estado aprobada (doble clic)
 function toggleAprobada(nombre, div) {
-  // Validar prerrequisitos solo si se va a aprobar y no está aprobada ya
   if (!div.classList.contains("aprobada")) {
     const prerreqs = div.getAttribute("data-prerrequisitos");
     const lista = prerreqs ? prerreqs.split(",").map(p => p.trim()) : [];
@@ -196,7 +220,6 @@ function toggleAprobada(nombre, div) {
   } else {
     div.classList.add("aprobada");
     aprobadas.push(nombre);
-    // Si estaba en curso, quitarlo
     if (div.classList.contains("en-curso")) {
       div.classList.remove("en-curso");
       enCurso = enCurso.filter(n => n !== nombre);
@@ -206,11 +229,46 @@ function toggleAprobada(nombre, div) {
   localStorage.setItem("aprobadas", JSON.stringify(aprobadas));
   actualizarInfo();
   actualizarVista();
+
+  chequearSemestreCompleto(nombre);
+  chequearCarreraCompleta();
+}
+
+// Verifica si el semestre está completo y muestra mensaje emergente
+function chequearSemestreCompleto(nombreAsignatura) {
+  // Buscar semestre de la asignatura aprobada
+  let semestreNumero = 0;
+  semestres.forEach((semestre, idx) => {
+    if (semestre.some(asig => asig.nombre === nombreAsignatura)) {
+      semestreNumero = idx + 1;
+    }
+  });
+
+  if (semestreNumero === 0) return;
+
+  // Verificar si todas las asignaturas del semestre están aprobadas
+  const semestreAsignaturas = semestres[semestreNumero - 1];
+  const todasAprobadas = semestreAsignaturas.every(asig => aprobadas.includes(asig.nombre));
+
+  if (todasAprobadas && !semestresMostrados.includes(semestreNumero)) {
+    alert(mensajesSemestre[semestreNumero] || `¡Has completado el semestre ${semestreNumero}!`);
+    semestresMostrados.push(semestreNumero);
+    localStorage.setItem("semestresMostrados", JSON.stringify(semestresMostrados));
+  }
+}
+
+// Verifica si toda la carrera está aprobada y muestra botón mensaje final
+function chequearCarreraCompleta() {
+  const totalAsignaturas = semestres.flat().length;
+  if (aprobadas.length === totalAsignaturas) {
+    btnMensajeFinal.style.display = "block";
+  } else {
+    btnMensajeFinal.style.display = "none";
+  }
 }
 
 // Alternar resaltado (3 clics)
 function toggleResaltada(nombre) {
-  // Quitar resaltado actual
   document.querySelectorAll(".asignatura.resaltada").forEach(el => {
     el.classList.remove("resaltada");
   });
@@ -222,12 +280,10 @@ function toggleResaltada(nombre) {
   }
 
   resaltadas.forEach(nombreR => {
-    // Resaltar prerrequisitos
     const asig = document.querySelector(`.asignatura[data-prerrequisitos*="${nombreR}"]`);
     if (asig) {
       asig.classList.add("resaltada");
     }
-    // Resaltar asignatura principal
     const principal = [...document.querySelectorAll(".asignatura")].find(el => el.textContent === nombreR);
     if (principal) {
       principal.classList.add("resaltada");
@@ -263,11 +319,9 @@ function actualizarInfo() {
   const avancePorcentaje = Math.round((aprobadasCount / totalAsignaturas) * 100);
   avanceSpan.textContent = `Avance: ${avancePorcentaje}%`;
 
-  // Semestre más atrasado = semestre menor de las asignaturas en curso
   if (enCurso.length === 0) {
     semestreAtrasadoSpan.textContent = "Semestre más atrasado: -";
   } else {
-    // Buscar el semestre más bajo entre las asignaturas en curso
     let minSemestre = Infinity;
     enCurso.forEach(nombre => {
       semestres.forEach((semestre, idx) => {
@@ -280,10 +334,10 @@ function actualizarInfo() {
   }
 }
 
-// Evento filtro
 filtro.addEventListener("change", () => {
   actualizarVista();
 });
 
 // Inicialización
 construirMalla();
+chequearCarreraCompleta();
