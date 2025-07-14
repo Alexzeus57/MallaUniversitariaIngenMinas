@@ -96,24 +96,11 @@ const semestres = [
 
 const malla = document.getElementById("malla");
 
-semestres.forEach((semestre, index) => {
-  const columna = document.createElement("div");
-  columna.className = "semestre";
-
-  const titulo = document.createElement("h2");
-  titulo.textContent = `Semestre ${index + 1}`;
-  columna.appendChild(titulo);
-
-  semestre.forEach(asig => {
-    const div = document.createElement("div");
-    div.className = "asignatura";
-    div.textContent = asig.nombre;
-    div.setAttribute("data-prerrequisitos", asig.prerrequisitos);
-
-   function marcarAprobada(nombre, div) {
+// Función para alternar aprobación y validar prerrequisitos
+function marcarAprobada(nombre, div) {
   const aprobadas = JSON.parse(localStorage.getItem("aprobadas")) || [];
 
-  // Si ya está aprobada, marcarla visualmente
+  // Si ya está aprobada, marcarla visualmente al cargar
   if (aprobadas.includes(nombre)) {
     div.classList.add("aprobada");
   }
@@ -124,7 +111,7 @@ semestres.forEach((semestre, index) => {
 
     // Validar prerrequisitos
     const faltantes = lista.filter(pr => !aprobadas.includes(pr));
-    if (faltantes.length > 0) {
+    if (!div.classList.contains("aprobada") && faltantes.length > 0) {
       alert(`No puedes aprobar esta asignatura aún. Faltan: ${faltantes.join(", ")}`);
       return;
     }
@@ -142,6 +129,24 @@ semestres.forEach((semestre, index) => {
     localStorage.setItem("aprobadas", JSON.stringify(aprobadas));
   });
 }
+
+// Construcción de la malla
+semestres.forEach((semestre, index) => {
+  const columna = document.createElement("div");
+  columna.className = "semestre";
+
+  const titulo = document.createElement("h2");
+  titulo.textContent = `Semestre ${index + 1}`;
+  columna.appendChild(titulo);
+
+  semestre.forEach(asig => {
+    const div = document.createElement("div");
+    div.className = "asignatura";
+    div.textContent = asig.nombre;
+    div.setAttribute("data-prerrequisitos", asig.prerrequisitos);
+
+    // Aquí llamamos la función para marcar aprobada y agregar el evento
+    marcarAprobada(asig.nombre, div);
 
     columna.appendChild(div);
   });
