@@ -12,7 +12,7 @@ const mensajesSemestre = {
   11: "¡INCREÍBLE! ¡Has completado toda la carrera! 🎓🎉"
 };
 
-const mensajeFinal = `Mi amada pulguita, siempre supe que serías capaz de terminar la carrera, me siento enormemente orgulloso de ti, de todo el esfuerzo, las lagrimas y el sudor que pusiste en cada uno de los momentos que viviste durante todos estos años. Sé lo mucho que sacrificaste para conseguirlo. Te amo muchísimo, disfrútalo, vívelo y jamás te des por vencida, tú eres increíble, devórate el mundo entero. Atte Tu Osito.`;
+const mensajeFinal = Mi amada pulguita, siempre supe que serías capaz de terminar la carrera, me siento enormemente orgulloso de ti, de todo el esfuerzo, las lagrimas y el sudor que pusiste en cada uno de los momentos que viviste durante todos estos años. Sé lo mucho que sacrificaste para conseguirlo. Te amo muchísimo, disfrútalo, vívelo y jamás te des por vencida, tú eres increíble, devórate el mundo entero. Atte Tu Osito.;
 
 const semestres = [
   // Semestre 1
@@ -126,9 +126,6 @@ let resaltadas = [];
 const clickDelay = 350;
 let clickTimeout = null;
 
-// Timeout para mantener presionado
-let holdTimeout = null;
-
 // Construye la malla
 function construirMalla() {
   malla.innerHTML = "";
@@ -138,7 +135,7 @@ function construirMalla() {
     columna.className = "semestre";
 
     const titulo = document.createElement("h2");
-    titulo.textContent = `Semestre ${index + 1}`;
+    titulo.textContent = Semestre ${index + 1};
     columna.appendChild(titulo);
 
     // Botón para mostrar mensaje emergente de aprobación del semestre
@@ -158,15 +155,9 @@ function construirMalla() {
       div.setAttribute("data-prerrequisitos", asig.prerrequisitos);
       div.setAttribute("data-semestre", index + 1);
 
-      // Estado bloqueado si prerrequisitos no cumplidos
-      if (!puedeCursar(asig.nombre) && !aprobadas.includes(asig.nombre) && !enCurso.includes(asig.nombre)) {
-        div.classList.add("bloqueada");
-      }
-
       if (aprobadas.includes(asig.nombre)) div.classList.add("aprobada");
       else if (enCurso.includes(asig.nombre)) div.classList.add("en-curso");
 
-      // Contar clics rápidos
       let clickCount = 0;
       div.addEventListener("click", (e) => {
         e.preventDefault();
@@ -185,19 +176,6 @@ function construirMalla() {
         }, clickDelay);
       });
 
-      // Detectar mantener presionado 2 segundos
-      div.addEventListener("mousedown", () => {
-        holdTimeout = setTimeout(() => {
-          resaltarPrerrequisitos(asig.nombre);
-        }, 2000);
-      });
-      div.addEventListener("mouseup", () => {
-        clearTimeout(holdTimeout);
-      });
-      div.addEventListener("mouseleave", () => {
-        clearTimeout(holdTimeout);
-      });
-
       columna.appendChild(div);
     });
 
@@ -208,18 +186,6 @@ function construirMalla() {
   actualizarInfo();
 }
 
-// Comprueba si se pueden cursar los prerrequisitos de una asignatura
-function puedeCursar(nombre) {
-  const asig = semestres.flat().find(a => a.nombre === nombre);
-  if (!asig) return true; // si no encuentra, asume que puede cursar
-
-  if (!asig.prerrequisitos) return true;
-  const lista = asig.prerrequisitos.split(",").map(p => p.trim()).filter(p => p.length > 0);
-  if (lista.length === 0) return true;
-
-  return lista.every(pr => aprobadas.includes(pr));
-}
-
 // Toggle estados
 function toggleEnCurso(nombre, div) {
   if (div.classList.contains("aprobada")) return;
@@ -228,10 +194,6 @@ function toggleEnCurso(nombre, div) {
     div.classList.remove("en-curso");
     enCurso = enCurso.filter(n => n !== nombre);
   } else {
-    if (!puedeCursar(nombre)) {
-      alert("No puedes poner esta asignatura como en curso, falta(s) prerrequisito(s) aprobado(s).");
-      return;
-    }
     div.classList.add("en-curso");
     enCurso.push(nombre);
   }
@@ -246,7 +208,7 @@ function toggleAprobada(nombre, div) {
     const lista = prerreqs ? prerreqs.split(",").map(p => p.trim()) : [];
     const faltantes = lista.filter(pr => !aprobadas.includes(pr));
     if (faltantes.length > 0) {
-      alert(`No puedes aprobar esta asignatura aún. Faltan: ${faltantes.join(", ")}`);
+      alert(No puedes aprobar esta asignatura aún. Faltan: ${faltantes.join(", ")});
       return;
     }
   }
@@ -278,48 +240,28 @@ function toggleAprobada(nombre, div) {
 }
 
 function toggleResaltada(nombre) {
-  // Si ya está resaltada, quitar resaltado
-  if (resaltadas.length === 1 && resaltadas[0] === nombre) {
-    quitarResaltados();
-    return;
+  document.querySelectorAll(".asignatura.resaltada").forEach(el => el.classList.remove("resaltada"));
+
+  if (resaltadas.includes(nombre)) {
+    resaltadas = [];
+  } else {
+    resaltadas = [nombre];
   }
-  resaltarPrerrequisitos(nombre);
-}
 
-function resaltarPrerrequisitos(nombre) {
-  quitarResaltados();
-
-  // Añade resaltado a la asignatura y sus prerrequisitos
-  resaltadas = [];
-
-  // Encontrar asignatura
-  const asigPrincipal = [...document.querySelectorAll(".asignatura")].find(el => el.textContent === nombre);
-  if (!asigPrincipal) return;
-
-  resaltadas.push(nombre);
-  asigPrincipal.classList.add("resaltada");
-
-  // Agregar prerrequisitos
-  const prerreqsStr = asigPrincipal.getAttribute("data-prerrequisitos");
-  if (prerreqsStr) {
-    const prerreqs = prerreqsStr.split(",").map(p => p.trim()).filter(p => p.length > 0);
-    prerreqs.forEach(pr => {
-      const prEl = [...document.querySelectorAll(".asignatura")].find(el => el.textContent === pr);
-      if (prEl) {
-        prEl.classList.add("resaltada");
-        resaltadas.push(pr);
-      }
+  resaltadas.forEach(nombreR => {
+    // Resaltar prerrequisitos
+    const asigsConPrerreq = [...document.querySelectorAll(".asignatura")].filter(el => {
+      const prereqs = el.getAttribute("data-prerrequisitos").split(",").map(p => p.trim());
+      return prereqs.includes(nombreR);
     });
-  }
-}
+    asigsConPrerreq.forEach(asig => asig.classList.add("resaltada"));
 
-// Quitar resaltados
-function quitarResaltados() {
-  resaltadas.forEach(nombre => {
-    const el = [...document.querySelectorAll(".asignatura")].find(e => e.textContent === nombre);
-    if (el) el.classList.remove("resaltada");
+    // Resaltar asignatura principal
+    const principal = [...document.querySelectorAll(".asignatura")].find(el => el.textContent === nombreR);
+    if (principal) {
+      principal.classList.add("resaltada");
+    }
   });
-  resaltadas = [];
 }
 
 // Verifica si todas las asignaturas de un semestre están aprobadas
@@ -328,24 +270,17 @@ function checkSemestreCompleto(semestre) {
   return asignaturasSemestre.every(nombre => aprobadas.includes(nombre));
 }
 
-// Actualiza vista según filtro y estado de prerrequisitos
+// Actualiza vista según filtro
 function actualizarVista() {
   const filtroValor = filtro.value;
 
   document.querySelectorAll(".asignatura").forEach(div => {
     div.classList.remove("oculto");
-    div.classList.remove("bloqueada"); // Reseteo bloqueada para volver a calcular abajo
 
     const nombre = div.textContent;
     const estaAprobada = aprobadas.includes(nombre);
     const estaEnCurso = enCurso.includes(nombre);
 
-    // Si no puede cursar y no está aprobada ni en curso, está bloqueada
-    if (!puedeCursar(nombre) && !estaAprobada && !estaEnCurso) {
-      div.classList.add("bloqueada");
-    }
-
-    // Aplicar filtro
     if (filtroValor === "aprobadas" && !estaAprobada) {
       div.classList.add("oculto");
     } else if (filtroValor === "en-curso" && !estaEnCurso) {
@@ -361,7 +296,7 @@ function actualizarInfo() {
   const totalAsignaturas = semestres.flat().length;
   const aprobadasCount = aprobadas.length;
   const avancePorcentaje = Math.round((aprobadasCount / totalAsignaturas) * 100);
-  avanceSpan.textContent = `Avance: ${avancePorcentaje}%`;
+  avanceSpan.textContent = Avance: ${avancePorcentaje}%;
 
   if (enCurso.length === 0) {
     semestreAtrasadoSpan.textContent = "Semestre más atrasado: -";
@@ -374,7 +309,7 @@ function actualizarInfo() {
         }
       });
     });
-    semestreAtrasadoSpan.textContent = `Semestre más atrasado: ${minSemestre}`;
+    semestreAtrasadoSpan.textContent = Semestre más atrasado: ${minSemestre};
   }
 }
 
@@ -426,15 +361,6 @@ function chequearCarreraCompleta() {
   }
 }
 
-// Clic en cualquier parte para quitar resaltados de prerrequisitos (mantener visibles hasta clic)
-document.body.addEventListener("click", (e) => {
-  // Evitar que al hacer click en asignaturas o botones quite el resaltado inmediatamente si quieres
-  // pero aquí quitamos resaltados si hay alguno
-  if (resaltadas.length > 0) {
-    quitarResaltados();
-  }
-});
-
 // Evento filtro
 filtro.addEventListener("change", () => {
   actualizarVista();
@@ -443,21 +369,3 @@ filtro.addEventListener("change", () => {
 // Inicialización
 construirMalla();
 chequearCarreraCompleta();
-Detalles importantes para que todo funcione perfecto:
-
-Asegúrate de tener definidos en tu CSS las clases nuevas:
-
-css
-Copiar
-Editar
-.asignatura.bloqueada {
-  color: gray;
-  opacity: 0.5;
-  pointer-events: none; /* para que no se pueda clicar si quieres */
-}
-
-.asignatura.resaltada {
-  background-color: #fceabb;
-  border: 2px solid #f9a825;
-  font-weight: bold;
-}
