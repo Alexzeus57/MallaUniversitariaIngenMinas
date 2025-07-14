@@ -1,103 +1,3 @@
-// (1) Agregado para detectar mantención de clic y resaltar prerrequisitos
-let mantenerPresionado = null;
-
-// (2) Construcción de la malla — Agregar lógica de mantención de clic y bloqueo visual
-function construirMalla() {
-  malla.innerHTML = "";
-
-  semestres.forEach((semestre, index) => {
-    const columna = document.createElement("div");
-    columna.className = "semestre";
-
-    const titulo = document.createElement("h2");
-    titulo.textContent = `Semestre ${index + 1}`;
-    columna.appendChild(titulo);
-
-    const btnMensaje = document.createElement("button");
-    btnMensaje.textContent = "Ver mensaje de aprobación";
-    btnMensaje.style.marginBottom = "10px";
-    btnMensaje.style.cursor = "pointer";
-    btnMensaje.addEventListener("click", () => {
-      alert(mensajesSemestre[index + 1] || "Mensaje no disponible.");
-    });
-    columna.appendChild(btnMensaje);
-
-    semestre.forEach(asig => {
-      const div = document.createElement("div");
-      div.className = "asignatura";
-      div.textContent = asig.nombre;
-      div.setAttribute("data-prerrequisitos", asig.prerrequisitos);
-      div.setAttribute("data-semestre", index + 1);
-
-      const prerreqs = asig.prerrequisitos.split(",").map(p => p.trim()).filter(p => p);
-      const bloqueada = prerreqs.length > 0 && prerreqs.some(p => !aprobadas.includes(p));
-      if (bloqueada && !aprobadas.includes(asig.nombre)) {
-        div.classList.add("bloqueada");
-      }
-
-      if (aprobadas.includes(asig.nombre)) div.classList.add("aprobada");
-      else if (enCurso.includes(asig.nombre)) div.classList.add("en-curso");
-
-      let clickCount = 0;
-      div.addEventListener("mousedown", () => {
-        mantenerPresionado = setTimeout(() => {
-          resaltarPrerrequisitos(asig);
-        }, 2000);
-      });
-      div.addEventListener("mouseup", () => {
-        clearTimeout(mantenerPresionado);
-      });
-      div.addEventListener("mouseleave", () => {
-        clearTimeout(mantenerPresionado);
-      });
-
-      div.addEventListener("click", (e) => {
-        e.preventDefault();
-        clickCount++;
-        if (clickTimeout) clearTimeout(clickTimeout);
-
-        clickTimeout = setTimeout(() => {
-          if (clickCount === 1) {
-            toggleEnCurso(asig.nombre, div);
-          } else if (clickCount === 2) {
-            toggleAprobada(asig.nombre, div);
-          } else if (clickCount === 3) {
-            toggleResaltada(asig.nombre);
-          }
-          clickCount = 0;
-        }, clickDelay);
-      });
-
-      columna.appendChild(div);
-    });
-
-    malla.appendChild(columna);
-  });
-
-  actualizarVista();
-  actualizarInfo();
-}
-
-// (3) Resaltar prerrequisitos de una asignatura al mantener presionado
-function resaltarPrerrequisitos(asignatura) {
-  document.querySelectorAll(".asignatura.resaltada").forEach(el => el.classList.remove("resaltada"));
-  const nombres = asignatura.prerrequisitos.split(",").map(p => p.trim()).filter(p => p);
-  nombres.forEach(nombre => {
-    const el = [...document.querySelectorAll(".asignatura")].find(d => d.textContent === nombre);
-    if (el) el.classList.add("resaltada");
-  });
-}
-
-// (4) Agregado estilo visual en CSS (referencia)
-/*
-.asignatura.bloqueada {
-  background-color: #ccc;
-  color: #666;
-  border: 1px solid #999;
-  cursor: not-allowed;
-}
-*/
-
 const mensajesSemestre = {
   1: "¡Bien hecho Pulguita! Completaste el primer paso. ¡El comienzo de un gran camino!",
   2: "¡Excelente Potito! El segundo al bolsillo. ¡Sigue así!",
@@ -226,6 +126,9 @@ let resaltadas = [];
 const clickDelay = 350;
 let clickTimeout = null;
 
+// Timeout para mantener presionado
+let holdTimeout = null;
+
 // Construye la malla
 function construirMalla() {
   malla.innerHTML = "";
@@ -255,9 +158,15 @@ function construirMalla() {
       div.setAttribute("data-prerrequisitos", asig.prerrequisitos);
       div.setAttribute("data-semestre", index + 1);
 
+      // Estado bloqueado si prerrequisitos no cumplidos
+      if (!puedeCursar(asig.nombre) && !aprobadas.includes(asig.nombre) && !enCurso.includes(asig.nombre)) {
+        div.classList.add("bloqueada");
+      }
+
       if (aprobadas.includes(asig.nombre)) div.classList.add("aprobada");
       else if (enCurso.includes(asig.nombre)) div.classList.add("en-curso");
 
+      // Contar clics rápidos
       let clickCount = 0;
       div.addEventListener("click", (e) => {
         e.preventDefault();
@@ -276,6 +185,19 @@ function construirMalla() {
         }, clickDelay);
       });
 
+      // Detectar mantener presionado 2 segundos
+      div.addEventListener("mousedown", () => {
+        holdTimeout = setTimeout(() => {
+          resaltarPrerrequisitos(asig.nombre);
+        }, 2000);
+      });
+      div.addEventListener("mouseup", () => {
+        clearTimeout(holdTimeout);
+      });
+      div.addEventListener("mouseleave", () => {
+        clearTimeout(holdTimeout);
+      });
+
       columna.appendChild(div);
     });
 
@@ -286,6 +208,18 @@ function construirMalla() {
   actualizarInfo();
 }
 
+// Comprueba si se pueden cursar los prerrequisitos de una asignatura
+function puedeCursar(nombre) {
+  const asig = semestres.flat().find(a => a.nombre === nombre);
+  if (!asig) return true; // si no encuentra, asume que puede cursar
+
+  if (!asig.prerrequisitos) return true;
+  const lista = asig.prerrequisitos.split(",").map(p => p.trim()).filter(p => p.length > 0);
+  if (lista.length === 0) return true;
+
+  return lista.every(pr => aprobadas.includes(pr));
+}
+
 // Toggle estados
 function toggleEnCurso(nombre, div) {
   if (div.classList.contains("aprobada")) return;
@@ -294,6 +228,10 @@ function toggleEnCurso(nombre, div) {
     div.classList.remove("en-curso");
     enCurso = enCurso.filter(n => n !== nombre);
   } else {
+    if (!puedeCursar(nombre)) {
+      alert("No puedes poner esta asignatura como en curso, falta(s) prerrequisito(s) aprobado(s).");
+      return;
+    }
     div.classList.add("en-curso");
     enCurso.push(nombre);
   }
@@ -340,28 +278,48 @@ function toggleAprobada(nombre, div) {
 }
 
 function toggleResaltada(nombre) {
-  document.querySelectorAll(".asignatura.resaltada").forEach(el => el.classList.remove("resaltada"));
-
-  if (resaltadas.includes(nombre)) {
-    resaltadas = [];
-  } else {
-    resaltadas = [nombre];
+  // Si ya está resaltada, quitar resaltado
+  if (resaltadas.length === 1 && resaltadas[0] === nombre) {
+    quitarResaltados();
+    return;
   }
+  resaltarPrerrequisitos(nombre);
+}
 
-  resaltadas.forEach(nombreR => {
-    // Resaltar prerrequisitos
-    const asigsConPrerreq = [...document.querySelectorAll(".asignatura")].filter(el => {
-      const prereqs = el.getAttribute("data-prerrequisitos").split(",").map(p => p.trim());
-      return prereqs.includes(nombreR);
+function resaltarPrerrequisitos(nombre) {
+  quitarResaltados();
+
+  // Añade resaltado a la asignatura y sus prerrequisitos
+  resaltadas = [];
+
+  // Encontrar asignatura
+  const asigPrincipal = [...document.querySelectorAll(".asignatura")].find(el => el.textContent === nombre);
+  if (!asigPrincipal) return;
+
+  resaltadas.push(nombre);
+  asigPrincipal.classList.add("resaltada");
+
+  // Agregar prerrequisitos
+  const prerreqsStr = asigPrincipal.getAttribute("data-prerrequisitos");
+  if (prerreqsStr) {
+    const prerreqs = prerreqsStr.split(",").map(p => p.trim()).filter(p => p.length > 0);
+    prerreqs.forEach(pr => {
+      const prEl = [...document.querySelectorAll(".asignatura")].find(el => el.textContent === pr);
+      if (prEl) {
+        prEl.classList.add("resaltada");
+        resaltadas.push(pr);
+      }
     });
-    asigsConPrerreq.forEach(asig => asig.classList.add("resaltada"));
+  }
+}
 
-    // Resaltar asignatura principal
-    const principal = [...document.querySelectorAll(".asignatura")].find(el => el.textContent === nombreR);
-    if (principal) {
-      principal.classList.add("resaltada");
-    }
+// Quitar resaltados
+function quitarResaltados() {
+  resaltadas.forEach(nombre => {
+    const el = [...document.querySelectorAll(".asignatura")].find(e => e.textContent === nombre);
+    if (el) el.classList.remove("resaltada");
   });
+  resaltadas = [];
 }
 
 // Verifica si todas las asignaturas de un semestre están aprobadas
@@ -370,17 +328,24 @@ function checkSemestreCompleto(semestre) {
   return asignaturasSemestre.every(nombre => aprobadas.includes(nombre));
 }
 
-// Actualiza vista según filtro
+// Actualiza vista según filtro y estado de prerrequisitos
 function actualizarVista() {
   const filtroValor = filtro.value;
 
   document.querySelectorAll(".asignatura").forEach(div => {
     div.classList.remove("oculto");
+    div.classList.remove("bloqueada"); // Reseteo bloqueada para volver a calcular abajo
 
     const nombre = div.textContent;
     const estaAprobada = aprobadas.includes(nombre);
     const estaEnCurso = enCurso.includes(nombre);
 
+    // Si no puede cursar y no está aprobada ni en curso, está bloqueada
+    if (!puedeCursar(nombre) && !estaAprobada && !estaEnCurso) {
+      div.classList.add("bloqueada");
+    }
+
+    // Aplicar filtro
     if (filtroValor === "aprobadas" && !estaAprobada) {
       div.classList.add("oculto");
     } else if (filtroValor === "en-curso" && !estaEnCurso) {
@@ -461,6 +426,15 @@ function chequearCarreraCompleta() {
   }
 }
 
+// Clic en cualquier parte para quitar resaltados de prerrequisitos (mantener visibles hasta clic)
+document.body.addEventListener("click", (e) => {
+  // Evitar que al hacer click en asignaturas o botones quite el resaltado inmediatamente si quieres
+  // pero aquí quitamos resaltados si hay alguno
+  if (resaltadas.length > 0) {
+    quitarResaltados();
+  }
+});
+
 // Evento filtro
 filtro.addEventListener("change", () => {
   actualizarVista();
@@ -469,3 +443,21 @@ filtro.addEventListener("change", () => {
 // Inicialización
 construirMalla();
 chequearCarreraCompleta();
+Detalles importantes para que todo funcione perfecto:
+
+Asegúrate de tener definidos en tu CSS las clases nuevas:
+
+css
+Copiar
+Editar
+.asignatura.bloqueada {
+  color: gray;
+  opacity: 0.5;
+  pointer-events: none; /* para que no se pueda clicar si quieres */
+}
+
+.asignatura.resaltada {
+  background-color: #fceabb;
+  border: 2px solid #f9a825;
+  font-weight: bold;
+}
