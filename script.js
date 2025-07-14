@@ -95,61 +95,195 @@ const semestres = [
 ];
 
 const malla = document.getElementById("malla");
+const filtro = document.getElementById("filtro");
+const avanceSpan = document.getElementById("avance");
+const semestreAtrasadoSpan = document.getElementById("semestre-atrasado");
 
-// Función para alternar aprobación y validar prerrequisitos
-function marcarAprobada(nombre, div) {
-  const aprobadas = JSON.parse(localStorage.getItem("aprobadas")) || [];
+// Estados guardados
+let aprobadas = JSON.parse(localStorage.getItem("aprobadas")) || [];
+let enCurso = JSON.parse(localStorage.getItem("enCurso")) || [];
+let resaltadas = []; // no persistimos resaltadas
 
-  // Si ya está aprobada, marcarla visualmente al cargar
-  if (aprobadas.includes(nombre)) {
-    div.classList.add("aprobada");
+// Para contar clics rápidos (1,2,3)
+const clickDelay = 350; // ms para diferenciar entre clicks
+let clickTimeout = null;
+
+// Construye la malla
+function construirMalla() {
+  malla.innerHTML = "";
+
+  semestres.forEach((semestre, index) => {
+    const columna = document.createElement("div");
+    columna.className = "semestre";
+
+    const titulo = document.createElement("h2");
+    titulo.textContent = `Semestre ${index + 1}`;
+    columna.appendChild(titulo);
+
+    semestre.forEach(asig => {
+      const div = document.createElement("div");
+      div.className = "asignatura";
+      div.textContent = asig.nombre;
+      div.setAttribute("data-prerrequisitos", asig.prerrequisitos);
+      div.setAttribute("data-semestre", index + 1);
+
+      // Estado visual inicial
+      if (aprobadas.includes(asig.nombre)) div.classList.add("aprobada");
+      else if (enCurso.includes(asig.nombre)) div.classList.add("en-curso");
+
+      // Manejo clicks múltiples
+      let clickCount = 0;
+      div.addEventListener("click", (e) => {
+        e.preventDefault();
+        clickCount++;
+        if (clickTimeout) clearTimeout(clickTimeout);
+
+        clickTimeout = setTimeout(() => {
+          if (clickCount === 1) {
+            toggleEnCurso(asig.nombre, div);
+          } else if (clickCount === 2) {
+            toggleAprobada(asig.nombre, div);
+          } else if (clickCount === 3) {
+            toggleResaltada(asig.nombre);
+          }
+          clickCount = 0;
+        }, clickDelay);
+      });
+
+      columna.appendChild(div);
+    });
+
+    malla.appendChild(columna);
+  });
+
+  actualizarVista();
+  actualizarInfo();
+}
+
+// Alternar estado en curso
+function toggleEnCurso(nombre, div) {
+  // Si está aprobada, no se puede poner en curso
+  if (div.classList.contains("aprobada")) return;
+
+  if (div.classList.contains("en-curso")) {
+    div.classList.remove("en-curso");
+    enCurso = enCurso.filter(n => n !== nombre);
+  } else {
+    div.classList.add("en-curso");
+    enCurso.push(nombre);
   }
+  localStorage.setItem("enCurso", JSON.stringify(enCurso));
+  actualizarInfo();
+  actualizarVista();
+}
 
-  div.addEventListener("click", () => {
+// Alternar estado aprobada (doble clic)
+function toggleAprobada(nombre, div) {
+  // Validar prerrequisitos solo si se va a aprobar y no está aprobada ya
+  if (!div.classList.contains("aprobada")) {
     const prerreqs = div.getAttribute("data-prerrequisitos");
     const lista = prerreqs ? prerreqs.split(",").map(p => p.trim()) : [];
-
-    // Validar prerrequisitos
     const faltantes = lista.filter(pr => !aprobadas.includes(pr));
-    if (!div.classList.contains("aprobada") && faltantes.length > 0) {
+    if (faltantes.length > 0) {
       alert(`No puedes aprobar esta asignatura aún. Faltan: ${faltantes.join(", ")}`);
       return;
     }
+  }
 
-    // Alternar estado
-    if (div.classList.contains("aprobada")) {
-      div.classList.remove("aprobada");
-      const index = aprobadas.indexOf(nombre);
-      if (index !== -1) aprobadas.splice(index, 1);
-    } else {
-      div.classList.add("aprobada");
-      aprobadas.push(nombre);
+  if (div.classList.contains("aprobada")) {
+    div.classList.remove("aprobada");
+    aprobadas = aprobadas.filter(n => n !== nombre);
+  } else {
+    div.classList.add("aprobada");
+    aprobadas.push(nombre);
+    // Si estaba en curso, quitarlo
+    if (div.classList.contains("en-curso")) {
+      div.classList.remove("en-curso");
+      enCurso = enCurso.filter(n => n !== nombre);
+      localStorage.setItem("enCurso", JSON.stringify(enCurso));
     }
+  }
+  localStorage.setItem("aprobadas", JSON.stringify(aprobadas));
+  actualizarInfo();
+  actualizarVista();
+}
 
-    localStorage.setItem("aprobadas", JSON.stringify(aprobadas));
+// Alternar resaltado (3 clics)
+function toggleResaltada(nombre) {
+  // Quitar resaltado actual
+  document.querySelectorAll(".asignatura.resaltada").forEach(el => {
+    el.classList.remove("resaltada");
+  });
+
+  if (resaltadas.includes(nombre)) {
+    resaltadas = [];
+  } else {
+    resaltadas = [nombre];
+  }
+
+  resaltadas.forEach(nombreR => {
+    // Resaltar prerrequisitos
+    const asig = document.querySelector(`.asignatura[data-prerrequisitos*="${nombreR}"]`);
+    if (asig) {
+      asig.classList.add("resaltada");
+    }
+    // Resaltar asignatura principal
+    const principal = [...document.querySelectorAll(".asignatura")].find(el => el.textContent === nombreR);
+    if (principal) {
+      principal.classList.add("resaltada");
+    }
   });
 }
 
-// Construcción de la malla
-semestres.forEach((semestre, index) => {
-  const columna = document.createElement("div");
-  columna.className = "semestre";
+// Actualiza la vista según el filtro seleccionado
+function actualizarVista() {
+  const filtroValor = filtro.value;
 
-  const titulo = document.createElement("h2");
-  titulo.textContent = `Semestre ${index + 1}`;
-  columna.appendChild(titulo);
+  document.querySelectorAll(".asignatura").forEach(div => {
+    div.classList.remove("oculto");
 
-  semestre.forEach(asig => {
-    const div = document.createElement("div");
-    div.className = "asignatura";
-    div.textContent = asig.nombre;
-    div.setAttribute("data-prerrequisitos", asig.prerrequisitos);
+    const nombre = div.textContent;
+    const estaAprobada = aprobadas.includes(nombre);
+    const estaEnCurso = enCurso.includes(nombre);
 
-    // Aquí llamamos la función para marcar aprobada y agregar el evento
-    marcarAprobada(asig.nombre, div);
-
-    columna.appendChild(div);
+    if (filtroValor === "aprobadas" && !estaAprobada) {
+      div.classList.add("oculto");
+    } else if (filtroValor === "en-curso" && !estaEnCurso) {
+      div.classList.add("oculto");
+    } else if (filtroValor === "por-cursar" && (estaAprobada || estaEnCurso)) {
+      div.classList.add("oculto");
+    }
   });
+}
 
-  malla.appendChild(columna);
+// Actualiza el porcentaje de avance y semestre atrasado
+function actualizarInfo() {
+  const totalAsignaturas = semestres.flat().length;
+  const aprobadasCount = aprobadas.length;
+  const avancePorcentaje = Math.round((aprobadasCount / totalAsignaturas) * 100);
+  avanceSpan.textContent = `Avance: ${avancePorcentaje}%`;
+
+  // Semestre más atrasado = semestre menor de las asignaturas en curso
+  if (enCurso.length === 0) {
+    semestreAtrasadoSpan.textContent = "Semestre más atrasado: -";
+  } else {
+    // Buscar el semestre más bajo entre las asignaturas en curso
+    let minSemestre = Infinity;
+    enCurso.forEach(nombre => {
+      semestres.forEach((semestre, idx) => {
+        if (semestre.some(asig => asig.nombre === nombre)) {
+          if (idx + 1 < minSemestre) minSemestre = idx + 1;
+        }
+      });
+    });
+    semestreAtrasadoSpan.textContent = `Semestre más atrasado: ${minSemestre}`;
+  }
+}
+
+// Evento filtro
+filtro.addEventListener("change", () => {
+  actualizarVista();
 });
+
+// Inicialización
+construirMalla();
