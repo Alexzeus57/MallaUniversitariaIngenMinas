@@ -341,3 +341,109 @@ filtro.addEventListener("change", () => {
 // Inicialización
 construirMalla();
 chequearCarreraCompleta();
+
+// ... Código anterior permanece igual hasta construirMalla()
+
+function construirMalla() {
+  malla.innerHTML = "";
+
+  semestres.forEach((semestre, index) => {
+    const columna = document.createElement("div");
+    columna.className = "semestre";
+
+    const titulo = document.createElement("h2");
+    titulo.textContent = `Semestre ${index + 1}`;
+    columna.appendChild(titulo);
+
+    // Crear botón para mostrar mensaje semestre
+    const btnMensajeSemestre = document.createElement("button");
+    btnMensajeSemestre.textContent = "Ver mensaje";
+    btnMensajeSemestre.style.marginBottom = "10px";
+    btnMensajeSemestre.style.display = "none"; // oculto por defecto
+    btnMensajeSemestre.addEventListener("click", () => {
+      alert(mensajesSemestre[index + 1] || `¡Has completado el semestre ${index + 1}!`);
+    });
+    columna.appendChild(btnMensajeSemestre);
+
+    semestre.forEach(asig => {
+      const div = document.createElement("div");
+      div.className = "asignatura";
+      div.textContent = asig.nombre;
+      div.setAttribute("data-prerrequisitos", asig.prerrequisitos);
+      div.setAttribute("data-semestre", index + 1);
+
+      if (aprobadas.includes(asig.nombre)) div.classList.add("aprobada");
+      else if (enCurso.includes(asig.nombre)) div.classList.add("en-curso");
+
+      let clickCount = 0;
+      div.addEventListener("click", (e) => {
+        e.preventDefault();
+        clickCount++;
+        if (clickTimeout) clearTimeout(clickTimeout);
+
+        clickTimeout = setTimeout(() => {
+          if (clickCount === 1) {
+            toggleEnCurso(asig.nombre, div);
+          } else if (clickCount === 2) {
+            toggleAprobada(asig.nombre, div);
+          } else if (clickCount === 3) {
+            toggleResaltada(asig.nombre);
+          }
+          clickCount = 0;
+        }, clickDelay);
+      });
+
+      columna.appendChild(div);
+    });
+
+    malla.appendChild(columna);
+  });
+
+  actualizarVista();
+  actualizarInfo();
+  mostrarBotonesMensajeSemestre();
+}
+
+// Nueva función para mostrar u ocultar los botones de mensaje semestre según aprobación
+function mostrarBotonesMensajeSemestre() {
+  const semestresDivs = document.querySelectorAll(".semestre");
+  semestresDivs.forEach((columna, idx) => {
+    const btn = columna.querySelector("button");
+    const semestreAsignaturas = semestres[idx];
+    const todasAprobadas = semestreAsignaturas.every(asig => aprobadas.includes(asig.nombre));
+    btn.style.display = todasAprobadas ? "block" : "none";
+  });
+}
+
+// Modifica toggleAprobada para llamar a mostrarBotonesMensajeSemestre después de actualizarVista
+function toggleAprobada(nombre, div) {
+  if (!div.classList.contains("aprobada")) {
+    const prerreqs = div.getAttribute("data-prerrequisitos");
+    const lista = prerreqs ? prerreqs.split(",").map(p => p.trim()) : [];
+    const faltantes = lista.filter(pr => !aprobadas.includes(pr));
+    if (faltantes.length > 0) {
+      alert(`No puedes aprobar esta asignatura aún. Faltan: ${faltantes.join(", ")}`);
+      return;
+    }
+  }
+
+  if (div.classList.contains("aprobada")) {
+    div.classList.remove("aprobada");
+    aprobadas = aprobadas.filter(n => n !== nombre);
+  } else {
+    div.classList.add("aprobada");
+    aprobadas.push(nombre);
+    if (div.classList.contains("en-curso")) {
+      div.classList.remove("en-curso");
+      enCurso = enCurso.filter(n => n !== nombre);
+      localStorage.setItem("enCurso", JSON.stringify(enCurso));
+    }
+  }
+  localStorage.setItem("aprobadas", JSON.stringify(aprobadas));
+  actualizarInfo();
+  actualizarVista();
+  mostrarBotonesMensajeSemestre();
+
+  chequearSemestreCompleto(nombre);
+  chequearCarreraCompleta();
+}
