@@ -1,3 +1,19 @@
+const mensajesSemestre = {
+  1: "¡Bien hecho Pulguita! Completaste el primer paso. ¡El comienzo de un gran camino!",
+  2: "¡Excelente Potito! El segundo al bolsillo. ¡Sigue así!",
+  3: "¡Vas con todo! Tercer semestre completado con éxito, siempre cuenta conmigo.",
+  4: "¡Ya estás casi en la mitad! Cuarto semestre terminado y seguimos con el mismo apoyo.",
+  5: "¡Impresionante! Has superado cinco semestres, eres sequisima, no te rindas.",
+  6: "¡Wow! Ya llevas seis. ¡Una verdadera ingeniera hermosa por donde la miren!",
+  7: "¡Felicidades! Siete semestres, ya cada vez queda menos.",
+  8: "¡Solo faltan unos pocos pasos! Semestre ocho me mamas el xoxo, jeje.",
+  9: "¡Un paso más cerca de la meta! Nueve semestres, como siempre te dije, eres muy capaz.",
+  10: "¡Ya casi terminas! Semestre diez fuera del camino, no hay obstáculo que pueda contigo.",
+  11: "¡INCREÍBLE! ¡Has completado toda la carrera! 🎓🎉"
+};
+
+const mensajeFinal = `Mi amada pulguita, siempre supe que serías capaz de terminar la carrera, me siento enormemente orgulloso de ti, de todo el esfuerzo, las lagrimas y el sudor que pusiste en cada uno de los momentos que viviste durante todos estos años. Sé lo mucho que sacrificaste para conseguirlo. Te amo muchísimo, disfrútalo, vívelo y jamás te des por vencida, tú eres increíble, devórate el mundo entero. Atte Tu Osito.`;
+
 const semestres = [
   // Semestre 1
   [
@@ -92,49 +108,23 @@ const semestres = [
   [
     { nombre: "Trabajo de Titulación", prerrequisitos: "Tópico de Especialidad II, Legislación Laboral y Minera, Taller de Evaluación de Proyectos Metalúrgicos, Taller de Proyecto Mina Subterránea, Taller de Proyecto Mina Cielo Abierto, Electivo II" }
   ]
+
 ];
 
-const mensajesSemestre = {
-  1: "¡Bien hecho Pulguita! Completaste el primer paso. ¡El comienzo de un gran camino!",
-  2: "¡Excelente Potito! El segundo al bolsillo. ¡Sigue así!",
-  3: "¡Vas con todo! Tercer semestre completado con éxito, siempre cuenta conmigo.",
-  4: "¡Ya estás casi en la mitad! Cuarto semestre terminado y seguimos con el mismo apoyo.",
-  5: "¡Impresionante! Has superado cinco semestres, eres sequisima, no te rindas.",
-  6: "¡Wow! Ya llevas seis. ¡Una verdadera ingeniera hermosa por donde la miren!",
-  7: "¡Felicidades! Siete semestres, ya cada vez queda menos.",
-  8: "¡Solo faltan unos pocos pasos! Semestre ocho me mamas el xoxo, jeje.",
-  9: "¡Un paso más cerca de la meta! Nueve semestres, como siempre te dije, eres muy capaz.",
-  10: "¡Ya casi terminas! Semestre diez fuera del camino, no hay obstáculo que pueda contigo.",
-  11: "¡INCREÍBLE! ¡Has completado toda la carrera! 🎓🎉"
-};
-
-const mensajeFinal = `Mi amada pulguita, siempre supe que serías capaz de terminar la carrera, me siento enormemente orgulloso de ti, de todo el esfuerzo, las lagrimos y el sudor que pusiste en cada uno de los momentos que viviste durante todos estos años. Se lo mucho que sacrificaste para conseguirlo. Te amo muchisimo, disfrutalo, vivelo y jamás te des por vencida, tu eres increible, devorate el mundo entero. Atte Tu Osito.`;
-
+// Elementos DOM
 const malla = document.getElementById("malla");
 const filtro = document.getElementById("filtro");
 const avanceSpan = document.getElementById("avance");
 const semestreAtrasadoSpan = document.getElementById("semestre-atrasado");
 
-// Crear botón mensaje final y agregarlo debajo del título, oculto inicialmente
-let btnMensajeFinal = document.createElement("button");
-btnMensajeFinal.id = "btn-mensaje-final";
-btnMensajeFinal.textContent = "Ver mensaje especial final 🎉";
-btnMensajeFinal.style.display = "none"; // oculto inicialmente
-btnMensajeFinal.addEventListener("click", () => {
-  alert(mensajeFinal);
-});
-document.querySelector("h1").insertAdjacentElement("afterend", btnMensajeFinal);
-
 // Estados guardados
 let aprobadas = JSON.parse(localStorage.getItem("aprobadas")) || [];
 let enCurso = JSON.parse(localStorage.getItem("enCurso")) || [];
-let resaltadas = []; // no persistimos resaltadas
+let resaltadas = [];
 
-const clickDelay = 350; // ms para diferenciar entre clicks
+// Para contar clics rápidos (1,2,3)
+const clickDelay = 350;
 let clickTimeout = null;
-
-// Para controlar si ya mostré mensaje semestre (evitar repetir)
-let semestresMostrados = JSON.parse(localStorage.getItem("semestresMostrados")) || [];
 
 // Construye la malla
 function construirMalla() {
@@ -147,6 +137,16 @@ function construirMalla() {
     const titulo = document.createElement("h2");
     titulo.textContent = `Semestre ${index + 1}`;
     columna.appendChild(titulo);
+
+    // Botón para mostrar mensaje emergente de aprobación del semestre
+    const btnMensaje = document.createElement("button");
+    btnMensaje.textContent = "Ver mensaje de aprobación";
+    btnMensaje.style.marginBottom = "10px";
+    btnMensaje.style.cursor = "pointer";
+    btnMensaje.addEventListener("click", () => {
+      alert(mensajesSemestre[index + 1] || "Mensaje no disponible.");
+    });
+    columna.appendChild(btnMensaje);
 
     semestre.forEach(asig => {
       const div = document.createElement("div");
@@ -186,7 +186,7 @@ function construirMalla() {
   actualizarInfo();
 }
 
-// Alternar estado en curso
+// Toggle estados
 function toggleEnCurso(nombre, div) {
   if (div.classList.contains("aprobada")) return;
 
@@ -202,7 +202,6 @@ function toggleEnCurso(nombre, div) {
   actualizarVista();
 }
 
-// Alternar estado aprobada (doble clic)
 function toggleAprobada(nombre, div) {
   if (!div.classList.contains("aprobada")) {
     const prerreqs = div.getAttribute("data-prerrequisitos");
@@ -220,58 +219,28 @@ function toggleAprobada(nombre, div) {
   } else {
     div.classList.add("aprobada");
     aprobadas.push(nombre);
+
     if (div.classList.contains("en-curso")) {
       div.classList.remove("en-curso");
       enCurso = enCurso.filter(n => n !== nombre);
       localStorage.setItem("enCurso", JSON.stringify(enCurso));
+    }
+
+    // Mostrar mensaje emergente semestre aprobado si completó todas las asignaturas del semestre
+    const semestre = parseInt(div.getAttribute("data-semestre"));
+    if (checkSemestreCompleto(semestre)) {
+      alert(mensajesSemestre[semestre] || "¡Felicidades por completar el semestre!");
     }
   }
   localStorage.setItem("aprobadas", JSON.stringify(aprobadas));
   actualizarInfo();
   actualizarVista();
 
-  chequearSemestreCompleto(nombre);
   chequearCarreraCompleta();
 }
 
-// Verifica si el semestre está completo y muestra mensaje emergente
-function chequearSemestreCompleto(nombreAsignatura) {
-  // Buscar semestre de la asignatura aprobada
-  let semestreNumero = 0;
-  semestres.forEach((semestre, idx) => {
-    if (semestre.some(asig => asig.nombre === nombreAsignatura)) {
-      semestreNumero = idx + 1;
-    }
-  });
-
-  if (semestreNumero === 0) return;
-
-  // Verificar si todas las asignaturas del semestre están aprobadas
-  const semestreAsignaturas = semestres[semestreNumero - 1];
-  const todasAprobadas = semestreAsignaturas.every(asig => aprobadas.includes(asig.nombre));
-
-  if (todasAprobadas && !semestresMostrados.includes(semestreNumero)) {
-    alert(mensajesSemestre[semestreNumero] || `¡Has completado el semestre ${semestreNumero}!`);
-    semestresMostrados.push(semestreNumero);
-    localStorage.setItem("semestresMostrados", JSON.stringify(semestresMostrados));
-  }
-}
-
-// Verifica si toda la carrera está aprobada y muestra botón mensaje final
-function chequearCarreraCompleta() {
-  const totalAsignaturas = semestres.flat().length;
-  if (aprobadas.length === totalAsignaturas) {
-    btnMensajeFinal.style.display = "block";
-  } else {
-    btnMensajeFinal.style.display = "none";
-  }
-}
-
-// Alternar resaltado (3 clics)
 function toggleResaltada(nombre) {
-  document.querySelectorAll(".asignatura.resaltada").forEach(el => {
-    el.classList.remove("resaltada");
-  });
+  document.querySelectorAll(".asignatura.resaltada").forEach(el => el.classList.remove("resaltada"));
 
   if (resaltadas.includes(nombre)) {
     resaltadas = [];
@@ -280,10 +249,14 @@ function toggleResaltada(nombre) {
   }
 
   resaltadas.forEach(nombreR => {
-    const asig = document.querySelector(`.asignatura[data-prerrequisitos*="${nombreR}"]`);
-    if (asig) {
-      asig.classList.add("resaltada");
-    }
+    // Resaltar prerrequisitos
+    const asigsConPrerreq = [...document.querySelectorAll(".asignatura")].filter(el => {
+      const prereqs = el.getAttribute("data-prerrequisitos").split(",").map(p => p.trim());
+      return prereqs.includes(nombreR);
+    });
+    asigsConPrerreq.forEach(asig => asig.classList.add("resaltada"));
+
+    // Resaltar asignatura principal
     const principal = [...document.querySelectorAll(".asignatura")].find(el => el.textContent === nombreR);
     if (principal) {
       principal.classList.add("resaltada");
@@ -291,7 +264,13 @@ function toggleResaltada(nombre) {
   });
 }
 
-// Actualiza la vista según el filtro seleccionado
+// Verifica si todas las asignaturas de un semestre están aprobadas
+function checkSemestreCompleto(semestre) {
+  const asignaturasSemestre = semestres[semestre - 1].map(a => a.nombre);
+  return asignaturasSemestre.every(nombre => aprobadas.includes(nombre));
+}
+
+// Actualiza vista según filtro
 function actualizarVista() {
   const filtroValor = filtro.value;
 
@@ -312,7 +291,7 @@ function actualizarVista() {
   });
 }
 
-// Actualiza el porcentaje de avance y semestre atrasado
+// Actualiza avance y semestre atrasado
 function actualizarInfo() {
   const totalAsignaturas = semestres.flat().length;
   const aprobadasCount = aprobadas.length;
@@ -334,6 +313,55 @@ function actualizarInfo() {
   }
 }
 
+// Verifica si toda la carrera está aprobada y muestra mensaje final y botón
+function chequearCarreraCompleta() {
+  const totalAsignaturas = semestres.flat().length;
+  if (aprobadas.length === totalAsignaturas) {
+    // Ver si ya existe el mensaje final y botón
+    if (!document.getElementById("mensaje-final")) {
+      const contenedor = document.querySelector(".controles");
+
+      const mensajeDiv = document.createElement("div");
+      mensajeDiv.id = "mensaje-final";
+      mensajeDiv.style.marginTop = "10px";
+      mensajeDiv.style.padding = "10px";
+      mensajeDiv.style.backgroundColor = "#c9e5f6";
+      mensajeDiv.style.color = "#2a4d81";
+      mensajeDiv.style.border = "2px solid #183d6b";
+      mensajeDiv.style.borderRadius = "8px";
+      mensajeDiv.style.fontWeight = "bold";
+      mensajeDiv.textContent = mensajeFinal;
+
+      const btnMostrar = document.createElement("button");
+      btnMostrar.textContent = "Volver a ver mensaje final";
+      btnMostrar.style.display = "block";
+      btnMostrar.style.marginTop = "8px";
+      btnMostrar.style.padding = "8px";
+      btnMostrar.style.cursor = "pointer";
+      btnMostrar.style.borderRadius = "5px";
+      btnMostrar.style.border = "1.5px solid #183d6b";
+      btnMostrar.style.backgroundColor = "#fde9f0";
+      btnMostrar.style.color = "#a0516e";
+
+      btnMostrar.addEventListener("click", () => {
+        alert(mensajeFinal);
+      });
+
+      contenedor.appendChild(mensajeDiv);
+      contenedor.appendChild(btnMostrar);
+    }
+  } else {
+    // Si no está completo, ocultar mensaje final y botón si existen
+    const mensajeDiv = document.getElementById("mensaje-final");
+    if (mensajeDiv) mensajeDiv.remove();
+
+    const contenedor = document.querySelector(".controles");
+    const btnMostrar = contenedor.querySelector("button:nth-last-child(1)");
+    if (btnMostrar && btnMostrar.textContent === "Volver a ver mensaje final") btnMostrar.remove();
+  }
+}
+
+// Evento filtro
 filtro.addEventListener("change", () => {
   actualizarVista();
 });
@@ -341,109 +369,3 @@ filtro.addEventListener("change", () => {
 // Inicialización
 construirMalla();
 chequearCarreraCompleta();
-
-// ... Código anterior permanece igual hasta construirMalla()
-
-function construirMalla() {
-  malla.innerHTML = "";
-
-  semestres.forEach((semestre, index) => {
-    const columna = document.createElement("div");
-    columna.className = "semestre";
-
-    const titulo = document.createElement("h2");
-    titulo.textContent = `Semestre ${index + 1}`;
-    columna.appendChild(titulo);
-
-    // Crear botón para mostrar mensaje semestre
-    const btnMensajeSemestre = document.createElement("button");
-    btnMensajeSemestre.textContent = "Ver mensaje";
-    btnMensajeSemestre.style.marginBottom = "10px";
-    btnMensajeSemestre.style.display = "none"; // oculto por defecto
-    btnMensajeSemestre.addEventListener("click", () => {
-      alert(mensajesSemestre[index + 1] || `¡Has completado el semestre ${index + 1}!`);
-    });
-    columna.appendChild(btnMensajeSemestre);
-
-    semestre.forEach(asig => {
-      const div = document.createElement("div");
-      div.className = "asignatura";
-      div.textContent = asig.nombre;
-      div.setAttribute("data-prerrequisitos", asig.prerrequisitos);
-      div.setAttribute("data-semestre", index + 1);
-
-      if (aprobadas.includes(asig.nombre)) div.classList.add("aprobada");
-      else if (enCurso.includes(asig.nombre)) div.classList.add("en-curso");
-
-      let clickCount = 0;
-      div.addEventListener("click", (e) => {
-        e.preventDefault();
-        clickCount++;
-        if (clickTimeout) clearTimeout(clickTimeout);
-
-        clickTimeout = setTimeout(() => {
-          if (clickCount === 1) {
-            toggleEnCurso(asig.nombre, div);
-          } else if (clickCount === 2) {
-            toggleAprobada(asig.nombre, div);
-          } else if (clickCount === 3) {
-            toggleResaltada(asig.nombre);
-          }
-          clickCount = 0;
-        }, clickDelay);
-      });
-
-      columna.appendChild(div);
-    });
-
-    malla.appendChild(columna);
-  });
-
-  actualizarVista();
-  actualizarInfo();
-  mostrarBotonesMensajeSemestre();
-}
-
-// Nueva función para mostrar u ocultar los botones de mensaje semestre según aprobación
-function mostrarBotonesMensajeSemestre() {
-  const semestresDivs = document.querySelectorAll(".semestre");
-  semestresDivs.forEach((columna, idx) => {
-    const btn = columna.querySelector("button");
-    const semestreAsignaturas = semestres[idx];
-    const todasAprobadas = semestreAsignaturas.every(asig => aprobadas.includes(asig.nombre));
-    btn.style.display = todasAprobadas ? "block" : "none";
-  });
-}
-
-// Modifica toggleAprobada para llamar a mostrarBotonesMensajeSemestre después de actualizarVista
-function toggleAprobada(nombre, div) {
-  if (!div.classList.contains("aprobada")) {
-    const prerreqs = div.getAttribute("data-prerrequisitos");
-    const lista = prerreqs ? prerreqs.split(",").map(p => p.trim()) : [];
-    const faltantes = lista.filter(pr => !aprobadas.includes(pr));
-    if (faltantes.length > 0) {
-      alert(`No puedes aprobar esta asignatura aún. Faltan: ${faltantes.join(", ")}`);
-      return;
-    }
-  }
-
-  if (div.classList.contains("aprobada")) {
-    div.classList.remove("aprobada");
-    aprobadas = aprobadas.filter(n => n !== nombre);
-  } else {
-    div.classList.add("aprobada");
-    aprobadas.push(nombre);
-    if (div.classList.contains("en-curso")) {
-      div.classList.remove("en-curso");
-      enCurso = enCurso.filter(n => n !== nombre);
-      localStorage.setItem("enCurso", JSON.stringify(enCurso));
-    }
-  }
-  localStorage.setItem("aprobadas", JSON.stringify(aprobadas));
-  actualizarInfo();
-  actualizarVista();
-  mostrarBotonesMensajeSemestre();
-
-  chequearSemestreCompleto(nombre);
-  chequearCarreraCompleta();
-}
