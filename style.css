@@ -1,60 +1,169 @@
+/* Fondo general celeste pálido */
 body {
   font-family: Arial, sans-serif;
   margin: 20px;
-  background-color: #f4f4f4;
+  background-color: #d9ebf9; /* celeste pálido */
   color: #333;
 }
 
+/* Título centrado */
 h1 {
   text-align: center;
   margin-bottom: 20px;
 }
 
-.malla-container {
-  display: grid;
-  grid-template-columns: repeat(11, 1fr);
-  gap: 10px;
-  overflow-x: auto;
+/* Controles (filtro + info) arriba de la malla */
+.controles {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 15px;
+  flex-wrap: wrap;
 }
 
+.controles select {
+  padding: 6px 10px;
+  font-size: 1rem;
+  border-radius: 5px;
+  border: 1.5px solid #a0516e; /* rosa oscuro */
+  background-color: #fde9f0; /* rosa pálido */
+  color: #a0516e;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.controles select:hover {
+  background-color: #f9d8e3;
+}
+
+.info {
+  font-size: 1rem;
+  color: #333;
+  user-select: none;
+}
+
+/* Contenedor de la malla con grid y scroll horizontal */
+.malla-container {
+  display: grid;
+  grid-template-columns: repeat(11, minmax(100px, 1fr));
+  gap: 12px;
+  padding: 10px;
+  overflow-x: auto;
+  scroll-behavior: smooth;
+}
+
+/* Columna semestre con fondo transparente para distinguir pero no bloques */
 .semestre {
-  background-color: #fff;
-  border: 1px solid #ccc;
   padding: 10px;
   border-radius: 8px;
 }
 
+/* Título semestre más pequeño y centrado */
 .semestre h2 {
   text-align: center;
-  font-size: 1rem;
+  font-size: 0.85rem;
   margin-bottom: 10px;
+  color: #4a4a4a;
 }
 
+/* Asignatura base: fondo rosa pálido, texto y borde rosa oscuro */
 .asignatura {
-  background-color: #e0f0ff;
-  border: 1px solid #99c;
-  padding: 6px;
-  margin-bottom: 6px;
-  border-radius: 5px;
+  background-color: #fde9f0; /* rosa pálido */
+  color: #a0516e; /* rosa oscuro */
+  border: 1.5px solid #a0516e; /* rosa oscuro */
+  padding: 8px 10px;
+  margin-bottom: 8px;
+  border-radius: 8px;
+  font-size: 0.85rem;
   cursor: pointer;
-  transition: background 0.3s;
   position: relative;
+  user-select: none;
+  transition:
+    background-color 0.3s,
+    color 0.3s,
+    border-color 0.3s,
+    opacity 0.3s;
 }
 
+/* Hover muestra prerrequisitos encima */
 .asignatura:hover::after {
   content: attr(data-prerrequisitos);
   position: absolute;
-  top: -1.8em;
+  top: -2.3em;
   left: 0;
   background: #333;
   color: #fff;
-  font-size: 0.75em;
-  padding: 4px 8px;
-  border-radius: 4px;
-  white-space: pre;
+  font-size: 0.7rem;
+  padding: 4px 7px;
+  border-radius: 5px;
+  white-space: pre-wrap;
+  max-width: 220px;
+  z-index: 20;
+  box-shadow: 1px 1px 6px rgba(0,0,0,0.4);
 }
 
+/* Estado aprobado (doble clic) */
+/* Fondo celeste pálido, texto azul, borde azul oscuro */
 .asignatura.aprobada {
-  background-color: #b6e7c9;
-  text-decoration: line-through;
+  background-color: #c9e5f6;
+  color: #2a4d81;
+  border-color: #183d6b;
+  opacity: 1;
+}
+
+/* Línea diagonal para tachar (pseudo elemento) */
+.asignatura.aprobada::before {
+  content: "";
+  position: absolute;
+  left: 5px;
+  right: 5px;
+  top: 50%;
+  height: 2px;
+  background: #2a4d81;
+  transform: rotate(-45deg);
+  transform-origin: center;
+  pointer-events: none;
+}
+
+/* Estado en curso (1 clic) */
+/* Fondo amarillo claro, texto negro, borde naranja suave */
+.asignatura.en-curso {
+  background-color: #fff9d6;
+  color: #5c4700;
+  border-color: #dbb700;
+}
+
+/* Estado resaltado (3 clics) */
+/* Borde grueso y sombra */
+.asignatura.resaltada {
+  box-shadow: 0 0 10px 3px #ffe066;
+  border-width: 3px;
+  z-index: 10;
+}
+
+/* Ocultar asignaturas según filtro */
+.asignatura.oculto {
+  display: none !important;
+}
+
+/* Responsive: en pantallas chicas, menos columnas y tamaño más legible */
+@media (max-width: 900px) {
+  .malla-container {
+    grid-template-columns: repeat(5, minmax(100px, 1fr));
+  }
+}
+
+@media (max-width: 500px) {
+  .malla-container {
+    grid-template-columns: repeat(2, minmax(100px, 1fr));
+  }
+  .asignatura {
+    font-size: 0.75rem;
+    padding: 6px 8px;
+  }
+  .controles {
+    flex-direction: column;
+    gap: 10px;
+  }
 }
