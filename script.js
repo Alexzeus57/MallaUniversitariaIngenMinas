@@ -1,3 +1,4 @@
+// Mensajes personalizados por semestre
 const mensajesSemestre = {
   1: "¡Bien hecho Pulguita! Completaste el primer paso. ¡El comienzo de un gran camino!",
   2: "¡Excelente Potito! El segundo al bolsillo. ¡Sigue así!",
@@ -12,7 +13,7 @@ const mensajesSemestre = {
   11: "¡INCREÍBLE! ¡Has completado toda la carrera! 🎓🎉"
 };
 
-const mensajeFinal = Mi amada pulguita, siempre supe que serías capaz de terminar la carrera, me siento enormemente orgulloso de ti, de todo el esfuerzo, las lagrimas y el sudor que pusiste en cada uno de los momentos que viviste durante todos estos años. Sé lo mucho que sacrificaste para conseguirlo. Te amo muchísimo, disfrútalo, vívelo y jamás te des por vencida, tú eres increíble, devórate el mundo entero. Atte Tu Osito.;
+const mensajeFinal = "Mi amada pulguita, siempre supe que serías capaz de terminar la carrera, me siento enormemente orgulloso de ti, de todo el esfuerzo, las lagrimas y el sudor que pusiste en cada uno de los momentos que viviste durante todos estos años. Sé lo mucho que sacrificaste para conseguirlo. Te amo muchísimo, disfrútalo, vívelo y jamás te des por vencida, tú eres increíble, devórate el mundo entero. Atte Tu Osito.";
 
 const semestres = [
   // Semestre 1
@@ -111,22 +112,20 @@ const semestres = [
 
 ];
 
-// Elementos DOM
+// Elementos del DOM
 const malla = document.getElementById("malla");
 const filtro = document.getElementById("filtro");
 const avanceSpan = document.getElementById("avance");
 const semestreAtrasadoSpan = document.getElementById("semestre-atrasado");
 
-// Estados guardados
+// Estados
 let aprobadas = JSON.parse(localStorage.getItem("aprobadas")) || [];
 let enCurso = JSON.parse(localStorage.getItem("enCurso")) || [];
 let resaltadas = [];
 
-// Para contar clics rápidos (1,2,3)
 const clickDelay = 350;
 let clickTimeout = null;
 
-// Construye la malla
 function construirMalla() {
   malla.innerHTML = "";
 
@@ -135,10 +134,9 @@ function construirMalla() {
     columna.className = "semestre";
 
     const titulo = document.createElement("h2");
-    titulo.textContent = Semestre ${index + 1};
+    titulo.textContent = `Semestre ${index + 1}`;
     columna.appendChild(titulo);
 
-    // Botón para mostrar mensaje emergente de aprobación del semestre
     const btnMensaje = document.createElement("button");
     btnMensaje.textContent = "Ver mensaje de aprobación";
     btnMensaje.style.marginBottom = "10px";
@@ -186,7 +184,6 @@ function construirMalla() {
   actualizarInfo();
 }
 
-// Toggle estados
 function toggleEnCurso(nombre, div) {
   if (div.classList.contains("aprobada")) return;
 
@@ -208,7 +205,7 @@ function toggleAprobada(nombre, div) {
     const lista = prerreqs ? prerreqs.split(",").map(p => p.trim()) : [];
     const faltantes = lista.filter(pr => !aprobadas.includes(pr));
     if (faltantes.length > 0) {
-      alert(No puedes aprobar esta asignatura aún. Faltan: ${faltantes.join(", ")});
+      alert(`No puedes aprobar esta asignatura aún. Faltan: ${faltantes.join(", ")}`);
       return;
     }
   }
@@ -226,7 +223,6 @@ function toggleAprobada(nombre, div) {
       localStorage.setItem("enCurso", JSON.stringify(enCurso));
     }
 
-    // Mostrar mensaje emergente semestre aprobado si completó todas las asignaturas del semestre
     const semestre = parseInt(div.getAttribute("data-semestre"));
     if (checkSemestreCompleto(semestre)) {
       alert(mensajesSemestre[semestre] || "¡Felicidades por completar el semestre!");
@@ -249,14 +245,12 @@ function toggleResaltada(nombre) {
   }
 
   resaltadas.forEach(nombreR => {
-    // Resaltar prerrequisitos
     const asigsConPrerreq = [...document.querySelectorAll(".asignatura")].filter(el => {
       const prereqs = el.getAttribute("data-prerrequisitos").split(",").map(p => p.trim());
       return prereqs.includes(nombreR);
     });
     asigsConPrerreq.forEach(asig => asig.classList.add("resaltada"));
 
-    // Resaltar asignatura principal
     const principal = [...document.querySelectorAll(".asignatura")].find(el => el.textContent === nombreR);
     if (principal) {
       principal.classList.add("resaltada");
@@ -264,13 +258,11 @@ function toggleResaltada(nombre) {
   });
 }
 
-// Verifica si todas las asignaturas de un semestre están aprobadas
 function checkSemestreCompleto(semestre) {
   const asignaturasSemestre = semestres[semestre - 1].map(a => a.nombre);
   return asignaturasSemestre.every(nombre => aprobadas.includes(nombre));
 }
 
-// Actualiza vista según filtro
 function actualizarVista() {
   const filtroValor = filtro.value;
 
@@ -291,12 +283,11 @@ function actualizarVista() {
   });
 }
 
-// Actualiza avance y semestre atrasado
 function actualizarInfo() {
   const totalAsignaturas = semestres.flat().length;
   const aprobadasCount = aprobadas.length;
   const avancePorcentaje = Math.round((aprobadasCount / totalAsignaturas) * 100);
-  avanceSpan.textContent = Avance: ${avancePorcentaje}%;
+  avanceSpan.textContent = `Avance: ${avancePorcentaje}%`;
 
   if (enCurso.length === 0) {
     semestreAtrasadoSpan.textContent = "Semestre más atrasado: -";
@@ -309,15 +300,13 @@ function actualizarInfo() {
         }
       });
     });
-    semestreAtrasadoSpan.textContent = Semestre más atrasado: ${minSemestre};
+    semestreAtrasadoSpan.textContent = `Semestre más atrasado: ${minSemestre}`;
   }
 }
 
-// Verifica si toda la carrera está aprobada y muestra mensaje final y botón
 function chequearCarreraCompleta() {
   const totalAsignaturas = semestres.flat().length;
   if (aprobadas.length === totalAsignaturas) {
-    // Ver si ya existe el mensaje final y botón
     if (!document.getElementById("mensaje-final")) {
       const contenedor = document.querySelector(".controles");
 
@@ -351,7 +340,6 @@ function chequearCarreraCompleta() {
       contenedor.appendChild(btnMostrar);
     }
   } else {
-    // Si no está completo, ocultar mensaje final y botón si existen
     const mensajeDiv = document.getElementById("mensaje-final");
     if (mensajeDiv) mensajeDiv.remove();
 
@@ -361,11 +349,9 @@ function chequearCarreraCompleta() {
   }
 }
 
-// Evento filtro
 filtro.addEventListener("change", () => {
   actualizarVista();
 });
 
-// Inicialización
 construirMalla();
 chequearCarreraCompleta();
